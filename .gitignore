@@ -31,6 +31,9 @@ directors-cut/inputs/
 directors-cut/outputs/
 directors-cut/temp/
 
+# Music files (binary files not allowed in HF Spaces git)
+assets/music/**/*.mp3
+
 # Wheels / build
 build/
 dist/
