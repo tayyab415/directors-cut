@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(timeout 10 python:*)",
+      "Bash(/Users/tayyabkhan/anaconda3/bin/python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

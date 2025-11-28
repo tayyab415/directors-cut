@@ -1,0 +1,38 @@
+# Bytecode / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Logs & temp artifacts
+*.log
+gradio_share_url.txt
+
+# Local runtime assets (HF Spaces uses /tmp instead)
+assets/input/
+assets/output/
+assets/temp/
+temp/
+directors-cut/inputs/
+directors-cut/outputs/
+directors-cut/temp/
+
+# Wheels / build
+build/
+dist/
+*.egg-info/
+
