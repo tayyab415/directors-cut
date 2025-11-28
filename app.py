@@ -3335,6 +3335,47 @@ with gr.Blocks(title="Director's Cut") as app:
                     scale=4
                 )
                 reset_btn = gr.Button("🔄 Reset", scale=1, variant="secondary")
+            
+            # Cookies file upload (optional workaround for HF Spaces)
+            with gr.Accordion("🔐 YouTube Cookies (Optional - Bypass HF Spaces restriction)", open=False):
+                gr.Markdown("""
+                **Workaround for Hugging Face Spaces YouTube restriction:**
+                
+                Upload your YouTube cookies file to bypass network restrictions. This makes YouTube think requests are from a logged-in user.
+                
+                **How to get cookies:**
+                1. Install a browser extension like "Get cookies.txt LOCALLY" or "cookies.txt"
+                2. Go to youtube.com and make sure you're logged in
+                3. Export cookies for `www.youtube.com`
+                4. Upload the `.txt` file here
+                
+                **Note:** Cookies expire after ~2 weeks, you'll need to re-upload them.
+                """)
+                cookies_file_input = gr.File(
+                    label="Upload YouTube Cookies File (.txt)",
+                    file_types=[".txt"],
+                    type="filepath"
+                )
+                cookies_status = gr.Markdown("")
+                
+                def save_cookies_file(file_path):
+                    """Save uploaded cookies file to /tmp for use by yt-dlp."""
+                    if file_path is None:
+                        return "❌ No file uploaded"
+                    try:
+                        import shutil
+                        cookies_path = "/tmp/youtube_cookies.txt"
+                        shutil.copy(file_path, cookies_path)
+                        os.environ["YOUTUBE_COOKIES_FILE"] = cookies_path
+                        return f"✅ Cookies file saved! YouTube downloads should now work."
+                    except Exception as e:
+                        return f"❌ Error saving cookies: {e}"
+                
+                cookies_file_input.change(
+                    fn=save_cookies_file,
+                    inputs=[cookies_file_input],
+                    outputs=[cookies_status]
+                )
 
             # Step 1
             with gr.Group():

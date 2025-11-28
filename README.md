@@ -73,13 +73,17 @@ Full definitions live in `app.py` and mirror the Gradio tabs.
 - **⚠️ YouTube Download Limitation**: Hugging Face Spaces restricts outbound
   network access to YouTube for security reasons. The YouTube download features
   will not work on the public Space. **Workarounds:**
-  1. **Deploy YouTube Proxy Service** (Recommended): Deploy `youtube_proxy_service.py`
-     to Railway/Render/Fly.io and set `YOUTUBE_PROXY_URL` in Space settings.
+  1. **Upload YouTube Cookies** (Simplest!): Export your YouTube cookies using a
+     browser extension and upload them in the Space UI. See
+     [COOKIES_SETUP.md](COOKIES_SETUP.md) for step-by-step instructions. No
+     external services needed!
+  2. **Deploy YouTube Proxy Service**: Deploy `youtube_proxy_service.py` to
+     Railway/Render/Fly.io and set `YOUTUBE_PROXY_URL` in Space settings.
      See [YOUTUBE_PROXY_SETUP.md](YOUTUBE_PROXY_SETUP.md) for instructions.
-  2. **Use locally**: Run `python app.py` on your machine for full YouTube
+  3. **Use locally**: Run `python app.py` on your machine for full YouTube
      download functionality
-  3. **Upload videos**: Use the "Upload Video" option in the Production Studio tab
-  4. **MCP only**: Use the Space primarily for MCP file downloads (connect
+  4. **Upload videos**: Use the "Upload Video" option in the Production Studio tab
+  5. **MCP only**: Use the Space primarily for MCP file downloads (connect
      Claude Desktop to the Space URL)
 
 ## Local Development

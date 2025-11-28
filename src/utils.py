@@ -15,6 +15,12 @@ from src.paths import ensure_runtime_dirs
 # Proxy service URL (set via YOUTUBE_PROXY_URL env var)
 YOUTUBE_PROXY_URL = os.getenv("YOUTUBE_PROXY_URL", "").rstrip("/")
 
+# Cookies file path (set via YOUTUBE_COOKIES_FILE env var or default location)
+YOUTUBE_COOKIES_FILE = os.getenv("YOUTUBE_COOKIES_FILE", "")
+
+# Proxy configuration (set via YOUTUBE_PROXY env var, format: http://proxy:port or socks5://proxy:port)
+YOUTUBE_PROXY = os.getenv("YOUTUBE_PROXY", "")
+
 def _use_proxy_service() -> bool:
     """Check if proxy service is configured and available."""
     if not YOUTUBE_PROXY_URL:
@@ -24,6 +30,34 @@ def _use_proxy_service() -> bool:
         return response.status_code == 200
     except:
         return False
+
+def _get_cookies_file() -> Optional[str]:
+    """Get cookies file path if available."""
+    if YOUTUBE_COOKIES_FILE and os.path.exists(YOUTUBE_COOKIES_FILE):
+        return YOUTUBE_COOKIES_FILE
+    # Check default locations
+    default_paths = [
+        "/tmp/youtube_cookies.txt",
+        "youtube_cookies.txt",
+        os.path.join(os.path.expanduser("~"), ".youtube_cookies.txt"),
+    ]
+    for path in default_paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+def _get_ydl_opts_with_cookies(base_opts: dict) -> dict:
+    """Add cookies and proxy to yt-dlp options if available."""
+    cookies_file = _get_cookies_file()
+    if cookies_file:
+        base_opts['cookiefile'] = cookies_file
+        print(f"✓ Using cookies file: {cookies_file}")
+    
+    if YOUTUBE_PROXY:
+        base_opts['proxy'] = YOUTUBE_PROXY
+        print(f"✓ Using proxy: {YOUTUBE_PROXY}")
+    
+    return base_opts
 
 def extract_video_id(url_or_id: str) -> str:
     """Extract video ID from YouTube URL or return the ID if already provided."""
@@ -102,6 +136,7 @@ def download_video_segment(
         'quiet': False,
         'no_warnings': False,
     }
+    ydl_opts = _get_ydl_opts_with_cookies(ydl_opts)
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -190,6 +225,7 @@ def download_audio(url: str, output_filename: str = 'audio') -> str:
             'preferredquality': '192',
         }],
     }
+    ydl_opts = _get_ydl_opts_with_cookies(ydl_opts)
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -285,6 +321,7 @@ def get_video_info(url: str) -> dict:
         'quiet': True,
         'no_warnings': True,
     }
+    ydl_opts = _get_ydl_opts_with_cookies(ydl_opts)
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
