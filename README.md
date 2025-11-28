@@ -70,6 +70,15 @@ Full definitions live in `app.py` and mirror the Gradio tabs.
   expectations.
 - **Logging**: stdout logs stream to the Space console; Gradio progress boxes
   surface the same messages for MCP clients.
+- **⚠️ YouTube Download Limitation**: Hugging Face Spaces restricts outbound
+  network access to YouTube for security reasons. The YouTube download features
+  will not work on the public Space. **Workarounds:**
+  - Use the MCP server locally (run `python app.py` on your machine) for full
+    YouTube download functionality
+  - Upload video files directly using the "Upload Video" option in the
+    Production Studio tab
+  - Use the Space primarily for MCP file downloads (connect Claude Desktop to
+    the Space URL)
 
 ## Local Development
 

@@ -73,18 +73,47 @@ def download_video_segment(
             print(f"✓ Downloaded segment: {output_path}")
             return output_path
     except yt_dlp.utils.DownloadError as e:
-        error_msg = str(e)
-        if 'proxy' in error_msg.lower() or '403' in error_msg or 'Forbidden' in error_msg:
+        error_msg = str(e).lower()
+        if 'failed to resolve' in error_msg or 'no address associated with hostname' in error_msg:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
+        if 'proxy' in error_msg or '403' in error_msg or 'Forbidden' in error_msg:
             raise Exception(f"Network error: Cannot access YouTube. Your network may block YouTube access. Original error: {e}")
         elif 'unavailable' in error_msg.lower():
             raise Exception(f"Video unavailable: The video may be private, deleted, or region-locked. Original error: {e}")
         print(f"✗ Download failed: {e}")
         raise
     except OSError as e:
+        error_str = str(e).lower()
+        if 'failed to resolve' in error_str or 'no address associated with hostname' in error_str:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
         if 'Tunnel connection failed' in str(e) or 'proxy' in str(e).lower():
             raise Exception(f"Network error: Cannot connect to YouTube through proxy. Error: {e}")
         raise
     except Exception as e:
+        error_str = str(e).lower()
+        if 'failed to resolve' in error_str or 'no address associated with hostname' in error_str:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
         print(f"✗ Unexpected error: {e}")
         raise
 
@@ -111,18 +140,47 @@ def download_audio(url: str, output_filename: str = 'audio') -> str:
             print(f"✓ Downloaded audio: {output_path}")
             return output_path
     except yt_dlp.utils.DownloadError as e:
-        error_msg = str(e)
-        if 'proxy' in error_msg.lower() or '403' in error_msg or 'Forbidden' in error_msg:
+        error_msg = str(e).lower()
+        if 'failed to resolve' in error_msg or 'no address associated with hostname' in error_msg:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
+        if 'proxy' in error_msg or '403' in error_msg or 'Forbidden' in error_msg:
             raise Exception(f"Network error: Cannot access YouTube. Your network may block YouTube access. Original error: {e}")
         elif 'unavailable' in error_msg.lower():
             raise Exception(f"Video unavailable: The video may be private, deleted, or region-locked. Original error: {e}")
         print(f"✗ Audio download failed: {e}")
         raise
     except OSError as e:
+        error_str = str(e).lower()
+        if 'failed to resolve' in error_str or 'no address associated with hostname' in error_str:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
         if 'Tunnel connection failed' in str(e) or 'proxy' in str(e).lower():
             raise Exception(f"Network error: Cannot connect to YouTube through proxy. Error: {e}")
         raise
     except Exception as e:
+        error_str = str(e).lower()
+        if 'failed to resolve' in error_str or 'no address associated with hostname' in error_str:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option\n"
+                f"Original error: {e}"
+            )
         print(f"✗ Audio download failed: {e}")
         raise
 def get_video_info(url: str) -> dict:
@@ -159,5 +217,17 @@ def get_video_info(url: str) -> dict:
                 'id': info.get('id', ''),
             }
     except Exception as e:
+        error_str = str(e).lower()
+        # Check for DNS/network errors (common on HF Spaces)
+        if 'failed to resolve' in error_str or 'no address associated with hostname' in error_str or 'name resolution' in error_str:
+            raise Exception(
+                "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
+                "HF Spaces restricts outbound network access to YouTube for security reasons.\n\n"
+                "**Workarounds:**\n"
+                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "2. Upload video files directly using the 'Upload Video' option in the Production Studio tab\n"
+                "3. Use the Space for MCP file downloads only (connect Claude Desktop to the Space URL)\n\n"
+                f"Original error: {e}"
+            )
         print(f"✗ Failed to get video info: {e}")
         raise
