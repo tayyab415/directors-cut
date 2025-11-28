@@ -6,10 +6,24 @@ Includes video downloading logic integrated from crop-vid.
 import yt_dlp
 import os
 import re
+import requests
 from urllib.parse import urlparse, parse_qs
 from typing import List, Tuple, Optional
 
 from src.paths import ensure_runtime_dirs
+
+# Proxy service URL (set via YOUTUBE_PROXY_URL env var)
+YOUTUBE_PROXY_URL = os.getenv("YOUTUBE_PROXY_URL", "").rstrip("/")
+
+def _use_proxy_service() -> bool:
+    """Check if proxy service is configured and available."""
+    if not YOUTUBE_PROXY_URL:
+        return False
+    try:
+        response = requests.get(f"{YOUTUBE_PROXY_URL}/health", timeout=5)
+        return response.status_code == 200
+    except:
+        return False
 
 def extract_video_id(url_or_id: str) -> str:
     """Extract video ID from YouTube URL or return the ID if already provided."""
@@ -56,6 +70,30 @@ def download_video_segment(
     Returns:
         str: Path to the downloaded file
     """
+    # Try proxy service first if available
+    if _use_proxy_service():
+        try:
+            response = requests.post(
+                f"{YOUTUBE_PROXY_URL}/api/download-segment",
+                json={
+                    "url": url,
+                    "start_time": start_time,
+                    "end_time": end_time
+                },
+                timeout=600,  # 10 minutes for video download
+                stream=True
+            )
+            if response.status_code == 200:
+                output_path = f"{output_filename}.mp4"
+                with open(output_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                print(f"✓ Downloaded segment via proxy: {output_path}")
+                return output_path
+        except Exception as proxy_error:
+            print(f"⚠️ Proxy service failed, falling back to direct: {proxy_error}")
+    
+    # Fall back to direct download
     ydl_opts = {
         'format': format_spec,
         'download_ranges': yt_dlp.utils.download_range_func(None, [(start_time, end_time)]),
@@ -121,6 +159,26 @@ def download_audio(url: str, output_filename: str = 'audio') -> str:
     """
     Download audio only from a YouTube video (fast).
     """
+    # Try proxy service first if available
+    if _use_proxy_service():
+        try:
+            response = requests.post(
+                f"{YOUTUBE_PROXY_URL}/api/download-audio",
+                json={"url": url},
+                timeout=300,  # 5 minutes for download
+                stream=True
+            )
+            if response.status_code == 200:
+                output_path = f"{output_filename}.mp3"
+                with open(output_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                print(f"✓ Downloaded audio via proxy: {output_path}")
+                return output_path
+        except Exception as proxy_error:
+            print(f"⚠️ Proxy service failed, falling back to direct: {proxy_error}")
+    
+    # Fall back to direct download
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': f'{output_filename}.%(ext)s',
@@ -193,6 +251,36 @@ def get_video_info(url: str) -> dict:
     Returns:
         dict: Video information dictionary with description, uploader, channel, etc.
     """
+    # Try proxy service first if available
+    if _use_proxy_service():
+        try:
+            response = requests.post(
+                f"{YOUTUBE_PROXY_URL}/api/video-info",
+                json={"url": url},
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Convert to expected format
+                return {
+                    'title': data.get('title', ''),
+                    'description': data.get('description', ''),
+                    'duration': data.get('duration', 0),
+                    'uploader': data.get('uploader', ''),
+                    'channel': data.get('channel', ''),
+                    'channel_id': '',
+                    'upload_date': '',
+                    'view_count': 0,
+                    'categories': [],
+                    'tags': [],
+                    'formats': [],
+                    'thumbnail': data.get('thumbnail', ''),
+                    'id': data.get('id', ''),
+                }
+        except Exception as proxy_error:
+            print(f"⚠️ Proxy service failed, falling back to direct: {proxy_error}")
+    
+    # Fall back to direct download
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -224,9 +312,10 @@ def get_video_info(url: str) -> dict:
                 "❌ Network Error: Cannot access YouTube. This is a known limitation on Hugging Face Spaces.\n\n"
                 "HF Spaces restricts outbound network access to YouTube for security reasons.\n\n"
                 "**Workarounds:**\n"
-                "1. Use the MCP server locally (run `python app.py` on your machine)\n"
-                "2. Upload video files directly using the 'Upload Video' option in the Production Studio tab\n"
-                "3. Use the Space for MCP file downloads only (connect Claude Desktop to the Space URL)\n\n"
+                "1. Deploy the YouTube proxy service (see youtube_proxy_service.py) and set YOUTUBE_PROXY_URL\n"
+                "2. Use the MCP server locally (run `python app.py` on your machine)\n"
+                "3. Upload video files directly using the 'Upload Video' option in the Production Studio tab\n"
+                "4. Use the Space for MCP file downloads only (connect Claude Desktop to the Space URL)\n\n"
                 f"Original error: {e}"
             )
         print(f"✗ Failed to get video info: {e}")
